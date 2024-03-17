@@ -1,118 +1,146 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, {useState} from 'react';
+import {Modal, KeyboardAvoidingView, TextInput, StyleSheet,  Text,  View,TouchableOpacity,Keyboard} from 'react-native';
+import Task from './components/Task';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+export default function app(){
+   const [task, settask]= useState();
+   const [taskItems, setTaskItems]=useState([]);
+   const [addpopup, showAddPopup]= useState(false);
+   const [deletepopup, showDeletePopup]= useState(false);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+   const handleaddTask= () => {
+   Keyboard.dismiss();
+    setTaskItems([...taskItems, task]);
+    settask(null);
+   showAddPopup(true);
+   setTimeout(() => showAddPopup(false), 1500);
+   };
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+   const completeTask= (index)=> {
+   let itemCopy= [...taskItems];
+    itemCopy.splice(index, 1);
+    setTaskItems(itemCopy);
+    showDeletePopup(true);
+    setTimeout(() => showDeletePopup(false),1500 );
+   }
+   const getTodayDate = () => {
+   const today = new Date();
+   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+   return today.toLocaleDateString(undefined, options);
+       };
+    return(
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    <View style={styles.container}>
+        <View style={styles.TaskWrapper}>
+            <Text style={styles.titleSection} >Today's tasks </Text>
+            <Text style={styles.todayDate}>{getTodayDate()}</Text>
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+            <View style={styles.items}>
+            {
+            taskItems.map( (item, index) => {
+            return (
+             <TouchableOpacity key={index} onPress={()=> completeTask(index)}>
+              <Task  text={item}/>
+             </TouchableOpacity>
+          )})
+            }
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+            </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
+        <KeyboardAvoidingView
+        behavior={Platform.OS=='iso' ? "padding": "height"}
+        style={styles.writeTextWrapper}
+        >
+        <TextInput style={styles.input} placeholder={'write a text'} valus={task} onChangeText ={text => settask(text)}/>
+        <TouchableOpacity>
+            <View style={styles.addWrapper}>
+            <Text style={styles.addText} onPress={()=> handleaddTask()}>+</Text>
+            </View>
+        </TouchableOpacity>
+        </KeyboardAvoidingView>
+      <Modal visible={addpopup} transparent animationType="fade">
+        <View style={styles.popup}>
+            <Text style={styles.popupText}>Task added!</Text>
+        </View>
+        </Modal>
+        <Modal visible={deletepopup} transparent animationType="fade">
+        <View style={styles.popup}>
+            <Text style={styles.popupText}>Task deleted!</Text>
+        </View>
+        </Modal>
+    </View>
+    );
+};
+const styles =StyleSheet.create({
+    container:{
+    flex: 1,
+    backgroundColor: '#E8EAED',
+    },
+    TaskWrapper:{
+    paddingTop: 80,
+    padingHorizantal: 20,
+    },
+    titleSection:{
     fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+    fontWeight: 'bold',
+    textAlign: 'center',
+
+    },
+     todayDate:{
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+              },
+    items:{
+    marginTop:30,
+    marginLeft:10,
+    marginRight:10,
+    },
+     writeTextWrapper: {
+        position: 'absolute',
+        bottom: 60,
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center'
+      },
+      input: {
+        paddingVertical: 15,
+        paddingHorizontal: 15,
+        backgroundColor: '#FFF',
+        borderRadius: 60,
+        borderColor: '#C0C0C0',
+        borderWidth: 1,
+        width: 250,
+      },
+      addWrapper: {
+        width: 60,
+        height: 60,
+        backgroundColor: '#FFF',
+        borderRadius: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderColor: '#C0C0C0',
+        borderWidth: 1,
+      },
+      addText: {},
+     popup: {
+        backgroundColor: '#000000',
+        padding: 20,
+        borderRadius: 10,
+        alignSelf: 'center',
+        position: 'absolute',
+        top: '50%',
+        },
+        popupText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: 'bold',
+        },
+
 });
 
-export default App;
